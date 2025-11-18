@@ -45,6 +45,7 @@ class DataLoader {
             {
                 std::string file = mask_files[n];
                 mask = cv::imread(mask_dir + '/' + file, cv::IMREAD_GRAYSCALE);
+                std::cout << mask.size() << " - " << masks.size() << std::endl;
                 assert(mask.size() == masks.size());
                 if(intrinsic.cols() == 3)
                 {
