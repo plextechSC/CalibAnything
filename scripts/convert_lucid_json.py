@@ -83,7 +83,7 @@ def quaternion_to_rotation_matrix(quat: Dict[str, float]) -> List[List[float]]:
     wy = w * y
     wz = w * z
 
-    return [i
+    return [
         [1 - 2 * (yy + zz), 2 * (xy - wz), 2 * (xz + wy)],
         [2 * (xy + wz), 1 - 2 * (xx + zz), 2 * (yz - wx)],
         [2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (xx + yy)],
@@ -191,4 +191,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
