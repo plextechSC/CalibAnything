@@ -35,6 +35,7 @@ def eulerangles_to_rotmat(roll, pitch, yaw):
 
 # optical extrinsic from the tool.
 calibrationpath = './data/lucid/fwc_c/fwc_c.json'
+# calibrationpath = './data/lucid/fnc/fnc.json'
 with open(calibrationpath, "r") as f:
     data = json.load(f)
 
@@ -87,8 +88,8 @@ intrinsics = np.array([[intr['fx']*1, 0, intr['cx']*scale],
 
 
 scaled_K = intrinsics.copy()
-offset_h_1 = 300
-offset_h_2 = 300
+offset_h_1 = 0 # x
+offset_h_2 = 0 # y
 if scale != 1.0:
     offset_h_1 *= scale
     offset_h_2 *= scale
@@ -186,6 +187,7 @@ def project_to_file(point_cloud_file, image_file, output_file):
 #   base_name, _ = os.path.splitext(pcd_file)
 #   project_to_file(pcd_file, base_name + ".jpg", base_name + "_projection.jpg")
 image_file = "./data/lucid/fwc_c/0.png" # "../data/cam03/000000.png"
+# image_file = "./data/lucid/fnc/0.png"
 lidar_file = "./data/lucid/000000.pcd"  # PCD file
 output_file = "./cloudvisualization_output.png"
 project_to_file(lidar_file, image_file, output_file)
