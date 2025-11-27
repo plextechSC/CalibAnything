@@ -277,8 +277,8 @@ class LidarCameraAligner:
 if __name__ == "__main__":
     # Default file names (change these or pass as args)
     # You can create a dummy pcd and png to test if you don't have files ready.
-    pcd_file = "./data/lucid/pc/000000.pcd" 
-    png_file = "./data/lucid/images/000000.png"
+    pcd_file = "./data/lucid/000000.pcd" 
+    png_file = "./data/lucid/fnc/0.png"
     json_file = ""
 
     # Check if arguments provided

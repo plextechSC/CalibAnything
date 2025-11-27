@@ -34,7 +34,7 @@ def eulerangles_to_rotmat(roll, pitch, yaw):
   return rotmat
 
 # optical extrinsic from the tool.
-calibrationpath = './data/lucid/fwc_c/fwc_c.json'
+calibrationpath = './data/lucid/fwc_l/fwc_l.json'
 with open(calibrationpath, "r") as f:
     data = json.load(f)
 
@@ -101,6 +101,11 @@ camera_matrix = scaled_K
 # import pdb;pdb.set_trace()
 distortion = np.zeros((4, 1), dtype=float)
 #code block ends
+
+#printing distortion and extrinsics
+print('distortion', distortion)
+# print('instrinsics', intrinsics)
+print('extrinsics', camera_matrix)
 
 # import pdb;pdb.set_trace()
 import colorsys
@@ -185,7 +190,8 @@ def project_to_file(point_cloud_file, image_file, output_file):
 # for pcd_file in pcd_files:
 #   base_name, _ = os.path.splitext(pcd_file)
 #   project_to_file(pcd_file, base_name + ".jpg", base_name + "_projection.jpg")
-image_file = "./data/lucid/fwc_c/0.png" # "../data/cam03/000000.png"
+# DONT FORGET TO MODIFY PATH TO EXTRINSICS AND INTRINSICS
+image_file = "./data/lucid/fwc_l/0.png" # "../data/cam03/000000.png"
 lidar_file = "./data/lucid/000000.pcd"  # PCD file
 output_file = "./cloudvisualization_output.png"
 project_to_file(lidar_file, image_file, output_file)
