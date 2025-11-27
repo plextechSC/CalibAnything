@@ -103,6 +103,11 @@ camera_matrix = scaled_K
 distortion = np.zeros((4, 1), dtype=float)
 #code block ends
 
+#printing distortion and extrinsics
+print('distortion', distortion)
+# print('instrinsics', intrinsics)
+print('extrinsics', camera_matrix)
+
 # import pdb;pdb.set_trace()
 import colorsys
 
