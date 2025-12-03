@@ -10,6 +10,13 @@
 #include "utility.hpp"
 #include "dataloader.hpp"
 
+#ifdef USE_CUDA
+// Forward declaration of GPU class
+namespace calib_cuda {
+    class CalScoreGPU;
+}
+#endif
+
 struct PointXYZINS
 {
     PCL_ADD_POINT4D;
@@ -75,4 +82,11 @@ private:
     float max_score_ = 2;
     float POINT_PER_PIXEL = 0.05;
     float curvature_max_ = 0;
+
+#ifdef USE_CUDA
+    // GPU acceleration
+    std::unique_ptr<calib_cuda::CalScoreGPU> gpu_score_calculator_;
+    bool use_gpu_ = true;  // Try to use GPU, fallback to CPU if fails
+    int current_file_idx_ = 0;  // Current file being processed
+#endif
 };

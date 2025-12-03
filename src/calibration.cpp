@@ -1,5 +1,9 @@
 #include "calibration.hpp"
 
+#ifdef USE_CUDA
+#include "calibration_gpu.cuh"
+#endif
+
 cv::Mat color_bar = cv::Mat(1, 13 * 3 * 3, CV_8UC3);
 unsigned char *pBar = color_bar.data;
 void Create_ColorBar()
@@ -61,6 +65,39 @@ Calibrator::Calibrator(JsonParams json_params)
         pcs_.push_back(pc);
     }
     Create_ColorBar();
+
+#ifdef USE_CUDA
+    // Initialize GPU acceleration
+    std::cout << "Attempting to initialize GPU acceleration..." << std::endl;
+    gpu_score_calculator_ = std::make_unique<calib_cuda::CalScoreGPU>();
+
+    bool gpu_init_success = gpu_score_calculator_->Initialize(
+        pcs_,
+        masks_,
+        mask_point_num_,
+        n_mask_,
+        n_seg_,
+        params_.intrinsic,
+        IMG_W,
+        IMG_H,
+        POINT_PER_PIXEL,
+        curvature_max_
+    );
+
+    if (gpu_init_success) {
+        use_gpu_ = true;
+        std::cout << "GPU acceleration enabled! Score calculation will use CUDA." << std::endl;
+        std::cout << "GPU memory usage: "
+                  << gpu_score_calculator_->GetTotalGPUMemoryUsage() / (1024.0 * 1024.0)
+                  << " MB" << std::endl;
+    } else {
+        use_gpu_ = false;
+        gpu_score_calculator_.reset();
+        std::cout << "GPU initialization failed. Falling back to CPU implementation." << std::endl;
+    }
+#else
+    std::cout << "Built without CUDA support. Using CPU implementation." << std::endl;
+#endif
 }
 
 void Calibrator::ProcessPointcloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr pc_origin, pcl::PointCloud<PointXYZINS>::Ptr pc)
@@ -288,6 +325,30 @@ void Calibrator::Calibrate()
 
 double Calibrator::CalScore(Eigen::Matrix4f T)
 {
+#ifdef USE_CUDA
+    // Use GPU acceleration if available
+    if (use_gpu_ && gpu_score_calculator_ && gpu_score_calculator_->IsInitialized()) {
+        // Compute score using GPU for all files
+        double total_score = 0.0;
+        for (int f = 0; f < params_.N_FILE; f++) {
+            current_file_idx_ = f;
+            double file_score = gpu_score_calculator_->ComputeScore(T, f);
+            if (file_score < 0.0) {
+                // GPU error, fallback to CPU
+                std::cerr << "GPU score computation failed for file " << f
+                          << ". Disabling GPU and falling back to CPU." << std::endl;
+                use_gpu_ = false;
+                gpu_score_calculator_.reset();
+                // Retry with CPU
+                return CalScore(T);
+            }
+            total_score += file_score;
+        }
+        return total_score / params_.N_FILE;
+    }
+#endif
+
+    // CPU implementation (original code)
     double score = 0;
     float normal_sum = 0, intensity_sum = 0, segment_sum = 0;
     for (int f = 0; f < params_.N_FILE; f++)
