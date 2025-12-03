@@ -15,6 +15,7 @@ import argparse
 def main(input_dir:str, output_dir:str):
 
     masks_list = os.listdir(input_dir)
+    masks_list.sort()  # Sort the list to process directories in order
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     else:
@@ -24,6 +25,11 @@ def main(input_dir:str, output_dir:str):
     for mask_name in masks_list:
 
         input_dir_sub = input_dir + '/' + mask_name
+        
+        # Skip if not a directory (e.g., .DS_Store files on macOS)
+        if not os.path.isdir(input_dir_sub):
+            continue
+            
         output_dir_sub = output_dir + '/' + mask_name + '/'       
         os.makedirs(output_dir_sub)
 
