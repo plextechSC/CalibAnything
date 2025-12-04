@@ -88,8 +88,8 @@ intrinsics = np.array([[intr['fx']*1, 0, intr['cx']*scale],
 
 
 scaled_K = intrinsics.copy()
-offset_h_1 = 0 # x
-offset_h_2 = 0 # y
+offset_h_1 = 500 # x
+offset_h_2 = 964 # y
 if scale != 1.0:
     offset_h_1 *= scale
     offset_h_2 *= scale
@@ -99,7 +99,7 @@ scaled_K[1][2] =  2 * intrinsics[1, 2] - offset_h_1
 
 intrinsics = scaled_K
 camera_matrix = scaled_K
-# import pdb;pdb.set_trace()
+# # import pdb;pdb.set_trace()
 distortion = np.zeros((4, 1), dtype=float)
 #code block ends
 
@@ -168,9 +168,8 @@ def project_to_file(point_cloud_file, image_file, output_file):
       # import pdb;pdb.set_trace() 
       #try to interchangeably use cv2.fisheye.projectPoints and cv2.projectPoints and see what works for different scenarios
       # projected_points, _ = cv2.fisheye.projectPoints(np.array([np.array([image_3d_point], dtype='float32')], dtype='float32'), rotation_vector,
-      #                                                 translation_vector2, camera_matrix, distortion)
+                                                      # translation_vector2, camera_matrix, distortion)
       projected_points, _ = cv2.projectPoints(np.array([np.array([image_3d_point], dtype='float32')], dtype='float32'), rotation_vector, translation_vector2, camera_matrix, distortion)#for undistorted image only the image_3d_point and camera_matrix have values, rest all are zeros 
-                                          
       projected_point_in_2d = projected_points[0][0]
       if projected_point_in_2d[0] >= 0 and projected_point_in_2d[0] < image.shape[1] and projected_point_in_2d[1] >= 0 and projected_point_in_2d[1] < image.shape[0]:
         image_point_distance = np.linalg.norm(image_3d_point)
