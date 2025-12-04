@@ -11,9 +11,15 @@
 #include "dataloader.hpp"
 
 #ifdef USE_CUDA
-// Forward declaration of GPU class
+// Forward declaration of GPU classes
 namespace calib_cuda {
     class CalScoreGPU;
+}
+namespace pointcloud_cuda {
+    class PointCloudProcessorGPU;
+}
+namespace search_cuda {
+    class RandomSearchGPU;
 }
 #endif
 
@@ -84,9 +90,17 @@ private:
     float curvature_max_ = 0;
 
 #ifdef USE_CUDA
-    // GPU acceleration
+    // GPU acceleration (Phase 1: Score calculation)
     std::unique_ptr<calib_cuda::CalScoreGPU> gpu_score_calculator_;
     bool use_gpu_ = true;  // Try to use GPU, fallback to CPU if fails
     int current_file_idx_ = 0;  // Current file being processed
+
+    // Phase 2: Point cloud processing
+    std::unique_ptr<pointcloud_cuda::PointCloudProcessorGPU> gpu_pc_processor_;
+    bool use_gpu_preprocessing_ = true;
+
+    // Phase 3: Random search optimization
+    std::unique_ptr<search_cuda::RandomSearchGPU> gpu_random_search_;
+    bool use_gpu_search_ = true;
 #endif
 };

@@ -2,6 +2,8 @@
 
 #ifdef USE_CUDA
 #include "calibration_gpu.cuh"
+#include "pointcloud_gpu.cuh"
+#include "random_search_gpu.cuh"
 #endif
 
 cv::Mat color_bar = cv::Mat(1, 13 * 3 * 3, CV_8UC3);
