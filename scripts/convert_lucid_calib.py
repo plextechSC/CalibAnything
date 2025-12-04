@@ -189,10 +189,10 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
             "data": T_list
         },
         "T_lidar_to_cam_gt": {
-            "available": True,
-            "rows": 4,
-            "cols": 4,
-            "data": T_list
+            "available": False,
+            "rows": 0,
+            "cols": 0,
+            "data": []
         },
         "img_folder": "images",
         "mask_folder": "processed_masks",
