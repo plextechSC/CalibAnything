@@ -1,0 +1,3 @@
+python scripts/convert_lucid_calib.py --input data/lucid/fwc_c/fwc_c.json --output calib.json --roll-offset -15
+
+./bin/run_lidar2camera ./data/lucid_formatted/calib.json

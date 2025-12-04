@@ -150,16 +150,16 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
             "trans_m": 0.5
         },
         "point_range": {
-            "top": 0.4,
+            "top": 0.0,
             "bottom": 1.0
         },
         "down_sample": {
-            "is_valid": True,
+            "is_valid": False,
             "voxel_m": 0.05
         },
         "thread": {
             "is_multi_thread": True,
-            "num_thread": 4
+            "num_thread": 8
         }
     }
     
