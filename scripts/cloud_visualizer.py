@@ -3,9 +3,36 @@ import numpy as np
 import math
 import cv2
 import json
+import colorsys
+
+# SENSOR_MAP_GENERIC_GRAVITY
+#     cam-02 = 'FWC_C' (Front Wide Camera Center)
+#     cam-03 = 'FNC' (Front Narrow Camera)
+#     cam-04 = 'RNC_R' (Rear Narrow Camera Right)
+#     cam-05 = 'FWC_R' (Front Wide Camera Right)
+#     cam-06 = 'RNC_C' (Rear Narrow Camera Center)
+#     cam-07 = 'FWC_L' (Front Wide Camera Left)
+#     cam-08 = 'RNC_L' (Rear Narrow Camera Left)
+#     cam-09 = 'SVC_CR' (Surround View Camera Center Rear)
+#     cam-10 = 'SVC_CF' (Surround View Camera Center Front)
+#     cam-11 = 'SVC_L' (Surround View Camera Left)
+#     cam-12 = 'SVC_R' (Surround View Camera Right)
 
 
 np.set_printoptions(precision=6, suppress=True)
+
+# ============== CONFIGURATION - EASY TO CHANGE ==============
+# Calibration file path
+calibrationpath = './data/cam07/FWC_L.json'
+# calibrationpath = './data/lucid/fnc/fnc.json'
+
+# Input/output file paths
+# image_file = "./data/lucid/fwc_c/0.png" # "../data/cam03/000000.png"
+image_file = "./data/cam07/images/000000.png"
+# image_file = "./data/lucid/fnc/0.png"
+lidar_file = "./data/cam07/pc/000000.pcd"  # PCD file
+output_file = "./cloudvisualization_output.png"
+# ============================================================
 
 # gets the rotation matrix
 def eulerangles_to_rotmat(roll, pitch, yaw):
@@ -34,8 +61,6 @@ def eulerangles_to_rotmat(roll, pitch, yaw):
   return rotmat
 
 # optical extrinsic from the tool.
-calibrationpath = './data/lucid/fwc_c/fwc_c.json'
-# calibrationpath = './data/lucid/fnc/fnc.json'
 with open(calibrationpath, "r") as f:
     data = json.load(f)
 
@@ -109,7 +134,6 @@ print('distortion', distortion)
 print('extrinsics', camera_matrix)
 
 # import pdb;pdb.set_trace()
-import colorsys
 
 def create_color_ramp(num_colors):
   """
@@ -190,8 +214,4 @@ def project_to_file(point_cloud_file, image_file, output_file):
 # for pcd_file in pcd_files:
 #   base_name, _ = os.path.splitext(pcd_file)
 #   project_to_file(pcd_file, base_name + ".jpg", base_name + "_projection.jpg")
-image_file = "./data/lucid/fwc_c/0.png" # "../data/cam03/000000.png"
-# image_file = "./data/lucid/fnc/0.png"
-lidar_file = "./data/lucid/000000.pcd"  # PCD file
-output_file = "./cloudvisualization_output.png"
 project_to_file(lidar_file, image_file, output_file)
