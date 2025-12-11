@@ -13,9 +13,7 @@ def project_and_save(calib, points, image_file, output_image_file, cx_offset, cy
     fx = intrinsic_params['fx']
     fy = intrinsic_params['fy']
     cx = intrinsic_params['cx'] + cx_offset
-    cy = intrinsic_params['cy'] + cy_offset
-
-    
+    cy = intrinsic_params['cy'] + cy_offset 
     
     fisheye_model = intrinsic_params.get('camera_model') == 'fisheye'
 
@@ -49,7 +47,7 @@ def project_and_save(calib, points, image_file, output_image_file, cx_offset, cy
 
     transformed_points = (rotation_matrix @ points.T).T + translation_vector
     front_points = transformed_points[transformed_points[:, 2] > 0]
-    
+
     if project_func == cv2.fisheye.projectPoints:
         front_points_reshaped = front_points.reshape(-1, 1, 3)
         image_points, _ = project_func(front_points_reshaped, np.zeros((3, 1)), np.zeros((3, 1)), camera_matrix, dist_coeffs)
@@ -72,10 +70,10 @@ def project_and_save(calib, points, image_file, output_image_file, cx_offset, cy
 
 if __name__ == '__main__':
     # --- Set your own files and values here ---
-    calibration_file = '/Users/sgurram1/Downloads/VIN54Results/rnc_r_new2.json'
-    pcd_file = '/Users/sgurram1/Downloads/VIN54Results/converted54vin.pcd'
-    image_file = '/Users/sgurram1/Downloads/VIN54Results/frames/frame_00000.jpg'
-    output_image_file = '/Users/sgurram1/Downloads/VIN54Results/projected_outputcam4.jpg'
+    calibration_file = './data/cam06/RNC_C.json'
+    pcd_file = './data/cam06/pc/000000.pcd'
+    image_file = './data/cam06/images/000000.png'
+    output_image_file = './data/cam06/projected_outputcam6.jpg'
 
     cx_offset = 0
     cy_offset = 0

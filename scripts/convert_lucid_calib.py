@@ -12,30 +12,16 @@ import argparse
 import json
 import math
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
-def eulerangles_to_rotmat(roll: float, pitch: float, yaw: float) -> np.ndarray:
+def eulerangles_to_rotmat(roll_deg: float, pitch_deg: float, yaw_deg: float) -> np.ndarray:
     """
-    Convert Euler angles (in radians) to rotation matrix.
-    Uses the convention: R = R_yaw * R_pitch * R_roll
+    Convert Euler angles (in degrees) to rotation matrix.
+    Uses scipy's 'xyz' extrinsic convention to match normal_cloud_visualizer.py
     """
-    rotmat_roll = np.array([
-        [1, 0, 0],
-        [0, math.cos(roll), -math.sin(roll)],
-        [0, math.sin(roll), math.cos(roll)]
-    ])
-    rotmat_pitch = np.array([
-        [math.cos(pitch), 0, math.sin(pitch)],
-        [0, 1, 0],
-        [-math.sin(pitch), 0, math.cos(pitch)]
-    ])
-    rotmat_yaw = np.array([
-        [math.cos(yaw), -math.sin(yaw), 0],
-        [math.sin(yaw), math.cos(yaw), 0],
-        [0, 0, 1]
-    ])
-    rotmat = rotmat_yaw @ rotmat_pitch @ rotmat_roll
-    return rotmat
+    r = R.from_euler('xyz', [roll_deg, pitch_deg, yaw_deg], degrees=True)
+    return r.as_matrix()
 
 
 def compute_transformation_matrix(roll_deg: float, pitch_deg: float, yaw_deg: float,
@@ -46,31 +32,30 @@ def compute_transformation_matrix(roll_deg: float, pitch_deg: float, yaw_deg: fl
     The transformation is: P_cam = R^(-1) * (P_lidar - t)
     So T_lidar_to_cam = [R^(-1) | -R^(-1)*t]
                         [  0    |     1    ]
+    
+    This matches the transformation in normal_cloud_visualizer.py:
+        rotation_matrix = rotation_matrix_cam_to_lidar.T
+        translation_vector = -np.dot(rotation_matrix, translation_vector_cam_to_lidar)
     """
-    # Convert to radians
-    roll = math.radians(roll_deg)
-    pitch = math.radians(pitch_deg)
-    yaw = math.radians(yaw_deg)
+    # Compute rotation matrix (cam-to-lidar) using scipy - same as normal_cloud_visualizer.py
+    rot_cam_to_lidar = eulerangles_to_rotmat(roll_deg, pitch_deg, yaw_deg)
+    t_cam_to_lidar = np.array([px, py, pz])
     
-    # Compute rotation matrix
-    R = eulerangles_to_rotmat(roll, pitch, yaw)
-    t = np.array([px, py, pz])
-    
-    # Compute inverse transformation
-    R_inv = np.linalg.inv(R)
-    t_cam = -R_inv @ t
+    # Compute inverse transformation (lidar-to-cam)
+    rot_lidar_to_cam = rot_cam_to_lidar.T
+    t_lidar_to_cam = -rot_lidar_to_cam @ t_cam_to_lidar
     
     # Build 4x4 transformation matrix
     T = np.eye(4)
-    T[:3, :3] = R_inv
-    T[:3, 3] = t_cam
+    T[:3, :3] = rot_lidar_to_cam
+    T[:3, 3] = t_lidar_to_cam
     
     return T
 
 
 def convert_lucid_to_calib(input_path: str, output_path: str = None,
                            fx_scale: float = 1.0, fy_scale: float = 1.0,
-                           cx_scale: float = 2.0, cy_scale: float = 2.0,
+                           cx_scale: float = 1.0, cy_scale: float = 1.0,
                            roll_offset: float = 0.0, pitch_offset: float = 0.0, yaw_offset: float = 0.0,
                            tx_offset: float = 0.0, ty_offset: float = 0.0, tz_offset: float = 0.0,
                            file_names: list = None,
@@ -83,8 +68,8 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
         output_path: Path to output calib.json file (optional, if None returns dict only)
         fx_scale: Scale factor for fx (default 1.0)
         fy_scale: Scale factor for fy (default 1.0)
-        cx_scale: Scale factor for cx (default 2.0, to match cloud_visualizer.py)
-        cy_scale: Scale factor for cy (default 2.0, to match cloud_visualizer.py)
+        cx_scale: Scale factor for cx (default 1.0)
+        cy_scale: Scale factor for cy (default 1.0)
         roll_offset: Offset to add to roll angle in degrees (default 0.0)
         pitch_offset: Offset to add to pitch angle in degrees (default 0.0)
         yaw_offset: Offset to add to yaw angle in degrees (default 0.0)
@@ -110,19 +95,21 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
     cx = intr['cx'] * cx_scale
     cy = intr['cy'] * cy_scale
     
-    # Build 3x4 camera matrix
+    # Build 3x3 camera matrix
     cam_K = [
-        [fx, 0.0, cx, 0.0],
-        [0.0, fy, cy, 0.0],
-        [0.0, 0.0, 1.0, 0.0]
+        [fx, 0.0, cx],
+        [0.0, fy, cy],
+        [0.0, 0.0, 1.0]
     ]
     
     # Distortion coefficients (fisheye uses k1-k4, add 0 for 5th)
-    k1 = intr.get('k1', 0)
-    k2 = intr.get('k2', 0)
-    k3 = intr.get('k3', 0)
-    k4 = intr.get('k4', 0)
-    cam_dist = [k1, k2, k3, k4, 0]
+    # NOTE, NO CAMERA IMAGES ARE DISTORTED ATM SO CAM_DIST IS ALL 0
+    # k1 = intr.get('k1', 0)
+    # k2 = intr.get('k2', 0)
+    # k3 = intr.get('k3', 0)
+    # k4 = intr.get('k4', 0)
+    # cam_dist = [k1, k2, k3, k4, 0]
+    cam_dist = [0, 0, 0, 0, 0]
     
     # Apply offsets to extrinsic parameters
     roll = extr['roll'] + roll_offset
@@ -138,7 +125,7 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
     
     # Default file names
     if file_names is None:
-        file_names = ["000000", "000001", "000002"]
+        file_names = ["000000"]
     
     # Load template params if provided
     params = {
@@ -175,17 +162,17 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
     # Build output calibration
     calib = {
         "cam_K": {
-            "rows": 3,
-            "cols": 4,
+            "rows": len(cam_K),
+            "cols": len(cam_K[0]),
             "data": cam_K
         },
         "cam_dist": {
-            "cols": 5,
+            "cols": len(cam_dist),
             "data": cam_dist
         },
         "T_lidar_to_cam": {
-            "rows": 4,
-            "cols": 4,
+            "rows": len(T_list),
+            "cols": len(T_list[0]),
             "data": T_list
         },
         "T_lidar_to_cam_gt": {
@@ -232,10 +219,10 @@ Examples:
                         help='Scale factor for fx (default: 1.0)')
     parser.add_argument('--fy-scale', type=float, default=1.0,
                         help='Scale factor for fy (default: 1.0)')
-    parser.add_argument('--cx-scale', type=float, default=2.0,
-                        help='Scale factor for cx (default: 2.0)')
-    parser.add_argument('--cy-scale', type=float, default=2.0,
-                        help='Scale factor for cy (default: 2.0)')
+    parser.add_argument('--cx-scale', type=float, default=1.0,
+                        help='Scale factor for cx (default: 1.0)')
+    parser.add_argument('--cy-scale', type=float, default=1.0,
+                        help='Scale factor for cy (default: 1.0)')
     parser.add_argument('--roll-offset', type=float, default=0.0,
                         help='Offset to add to roll angle in degrees (default: 0.0)')
     parser.add_argument('--pitch-offset', type=float, default=0.0,
