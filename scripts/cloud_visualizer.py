@@ -23,15 +23,15 @@ np.set_printoptions(precision=6, suppress=True)
 
 # ============== CONFIGURATION - EASY TO CHANGE ==============
 # Calibration file path
-calibrationpath = './data/cam07/FWC_L.json'
+calibrationpath = './data/cam05/FWC_R.json'
 # calibrationpath = './data/lucid/fnc/fnc.json'
 
 # Input/output file paths
 # image_file = "./data/lucid/fwc_c/0.png" # "../data/cam03/000000.png"
-image_file = "./data/cam07/images/000000.png"
+image_file = "./data/cam05/images/000000.png"
 # image_file = "./data/lucid/fnc/0.png"
-lidar_file = "./data/cam07/pc/000000.pcd"  # PCD file
-output_file = "./cloudvisualization_output.png"
+lidar_file = "./data/cam05/pc/000000.pcd"  # PCD file
+output_file = "./data/cam05/cloudvisualization_output.png"
 # ============================================================
 
 # gets the rotation matrix
@@ -113,8 +113,11 @@ intrinsics = np.array([[intr['fx']*1, 0, intr['cx']*scale],
 
 
 scaled_K = intrinsics.copy()
-offset_h_1 = 500 # x
-offset_h_2 = 964 # y
+# OFFSET VALUES FOR WIDE CAMERAS
+# fwc_c = 500, 964
+# fwc_l, fwc_r = 300, 300
+offset_h_1 = 300 # x
+offset_h_2 = 300 # y
 if scale != 1.0:
     offset_h_1 *= scale
     offset_h_2 *= scale
