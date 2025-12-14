@@ -222,7 +222,8 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
                            file_names: list = None,
                            template_path: str = None,
                            is_wide_camera: bool = False,
-                           wide_offset_y: float = 0.0) -> dict:
+                           wide_offset_y: float = 0.0,
+                           custom_params: dict = None) -> dict:
     """
     Convert Lucid calibration JSON to calib.json format.
     
@@ -239,6 +240,7 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
         template_path: Path to existing calib.json to use as template for params
         is_wide_camera: If True, use wide camera intrinsics handling (default False)
         wide_offset_y: Y offset for wide camera cy calculation
+        custom_params: Custom params dict to use instead of defaults (overrides template_path)
     
     Returns:
         The converted calibration dictionary
@@ -319,7 +321,10 @@ def convert_lucid_to_calib(input_path: str, output_path: str = None,
         }
     }
     
-    if template_path:
+    # Priority: custom_params > template_path > defaults
+    if custom_params:
+        params = custom_params
+    elif template_path:
         try:
             with open(template_path, 'r') as f:
                 template = json.load(f)
@@ -421,6 +426,8 @@ Examples:
                         help='List of file names (default: 000000 000001 000002)')
     parser.add_argument('--template', default=None,
                         help='Path to existing calib.json to use as template for params')
+    parser.add_argument('--params-file', default=None,
+                        help='Path to JSON file containing file_names and params (e.g., test_params.json). Overrides --files and --template if those keys exist in the file.')
     parser.add_argument('--print-transform', action='store_true',
                         help='Print the computed transformation matrix')
     parser.add_argument('--cx-offset', type=float, default=0.0,
@@ -431,6 +438,23 @@ Examples:
                         help='Camera identifier: number (cam-02 to cam-08, or just 02-08) or name (FWC_C, FNC, RNC_R, etc.). If not provided, will try to auto-detect from input/output path.')
     
     args = parser.parse_args()
+
+    # Load params file if provided (overrides --files and provides custom_params)
+    file_names = args.files
+    custom_params = None
+    
+    if args.params_file:
+        try:
+            with open(args.params_file, 'r') as f:
+                params_data = json.load(f)
+                # Override file_names if present in params file
+                if 'file_names' in params_data:
+                    file_names = params_data['file_names']
+                # Load custom params if present
+                if 'params' in params_data:
+                    custom_params = params_data['params']
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Warning: Could not load params file '{args.params_file}': {e}")
 
     # Resolve camera from argument or auto-detect from paths
     camera_name = resolve_camera(args.camera, args.input, args.output)
@@ -449,10 +473,11 @@ Examples:
         tx_offset=args.tx_offset,
         ty_offset=args.ty_offset,
         tz_offset=args.tz_offset,
-        file_names=args.files,
+        file_names=file_names,
         template_path=args.template,
         is_wide_camera=is_wide_camera,
         wide_offset_y=wide_offset_y,
+        custom_params=custom_params,
     )
     
     if args.print_transform:
