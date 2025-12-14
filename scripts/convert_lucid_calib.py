@@ -35,7 +35,7 @@ VALID_CAMERA_NAMES = list(CAMERA_MAP.values())
 
 # Wide camera Y offset values
 WIDE_OFFSET_Y = {
-    'FWC_C': 964.0,
+    'FWC_C': 500.0,
     'FWC_L': 300.0,
     'FWC_R': 300.0,
 }
@@ -392,7 +392,7 @@ Examples:
   python scripts/convert_lucid_calib.py -i data/lucid/fnc/fnc.json -o output/calib.json --roll-offset 5.0
 
   # Camera mapping:
-  #   cam-02 = FWC_C (Front Wide Camera Center)  -> wide_offset_y=964
+  #   cam-02 = FWC_C (Front Wide Camera Center)  -> wide_offset_y=500
   #   cam-03 = FNC   (Front Narrow Camera)
   #   cam-04 = RNC_R (Rear Narrow Camera Right)
   #   cam-05 = FWC_R (Front Wide Camera Right)   -> wide_offset_y=300
