@@ -88,13 +88,14 @@ intrinsics = np.array([[intr['fx']*1, 0, intr['cx']*scale],
 
 
 scaled_K = intrinsics.copy()
-offset_h_1 = 0 # x
-offset_h_2 = 0 # y
+offset_h_1 = 500 # x
+offset_h_2 = 964 # y
+
 if scale != 1.0:
     offset_h_1 *= scale
     offset_h_2 *= scale
 
-scaled_K[0][2] =  2 * intrinsics[0, 2]
+scaled_K[0][2] =  2 * intrinsics[0, 2] 
 scaled_K[1][2] =  2 * intrinsics[1, 2] - offset_h_1
 
 intrinsics = scaled_K

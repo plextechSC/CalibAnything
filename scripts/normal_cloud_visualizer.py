@@ -69,13 +69,16 @@ def project_and_save(calib, points, image_file, output_image_file, cx_offset, cy
 
     cv2.imwrite(output_image_file, image)
     print(f"✅ Projected image saved to {output_image_file}")
+    print("camtolidar", rotation_matrix_cam_to_lidar)
+    print("distortions", dist_coeffs)
+    print("camera_mat", camera_matrix)
 
 if __name__ == '__main__':
     # --- Set your own files and values here ---
-    calibration_file = '/Users/sgurram1/Downloads/VIN54Results/rnc_r_new2.json'
-    pcd_file = '/Users/sgurram1/Downloads/VIN54Results/converted54vin.pcd'
-    image_file = '/Users/sgurram1/Downloads/VIN54Results/frames/frame_00000.jpg'
-    output_image_file = '/Users/sgurram1/Downloads/VIN54Results/projected_outputcam4.jpg'
+    calibration_file = '/Users/mahitnamburu/Desktop/LucidMotors/CalibAnything/data/lucid/rnc_c/rnc_c.json'
+    pcd_file = '/Users/mahitnamburu/Desktop/LucidMotors/CalibAnything/data/cam06/pc/000000.pcd'
+    image_file = '/Users/mahitnamburu/Desktop/LucidMotors/CalibAnything/data/cam06/images/000000.png'
+    output_image_file = '/Users/mahitnamburu/Desktop/LucidMotors/CalibAnything/projected_outputcam06.jpg'
 
     cx_offset = 0
     cy_offset = 0
