@@ -616,7 +616,7 @@ void Calibrator::VisualProjectionSegment(Eigen::Matrix4f T, std::string save_nam
 
     for (int i = 0; i < n_seg_[index]; i++)
     {
-        cv::Vec3b color = color_bar.at<cv::Vec3b>(0, i);
+        cv::Vec3b color = color_bar.at<cv::Vec3b>(0, i % color_bar.cols);
         for (cv::Point point : lidar_points[i])
         {
             cv::circle(img_color, point, 3, cv::Scalar(color[0], color[1], color[2]), -1, 0);

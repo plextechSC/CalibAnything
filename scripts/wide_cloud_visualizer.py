@@ -3,9 +3,36 @@ import numpy as np
 import math
 import cv2
 import json
+import colorsys
+
+# SENSOR_MAP_GENERIC_GRAVITY
+#     cam-02 = 'FWC_C' (Front Wide Camera Center)
+#     cam-03 = 'FNC' (Front Narrow Camera)
+#     cam-04 = 'RNC_R' (Rear Narrow Camera Right)
+#     cam-05 = 'FWC_R' (Front Wide Camera Right)
+#     cam-06 = 'RNC_C' (Rear Narrow Camera Center)
+#     cam-07 = 'FWC_L' (Front Wide Camera Left)
+#     cam-08 = 'RNC_L' (Rear Narrow Camera Left)
+#     cam-09 = 'SVC_CR' (Surround View Camera Center Rear)
+#     cam-10 = 'SVC_CF' (Surround View Camera Center Front)
+#     cam-11 = 'SVC_L' (Surround View Camera Left)
+#     cam-12 = 'SVC_R' (Surround View Camera Right)
 
 
 np.set_printoptions(precision=6, suppress=True)
+
+# ============== CONFIGURATION - EASY TO CHANGE ==============
+# Calibration file path
+calibrationpath = './data/cam05/FWC_R.json'
+# calibrationpath = './data/lucid/fnc/fnc.json'
+
+# Input/output file paths
+# image_file = "./data/lucid/fwc_c/0.png" # "../data/cam03/000000.png"
+image_file = "./data/cam05/images/000000.png"
+# image_file = "./data/lucid/fnc/0.png"
+lidar_file = "./data/cam05/pc/000000.pcd"  # PCD file
+output_file = "./data/cam05/cloudvisualization_output.png"
+# ============================================================
 
 # gets the rotation matrix
 def eulerangles_to_rotmat(roll, pitch, yaw):
@@ -34,8 +61,6 @@ def eulerangles_to_rotmat(roll, pitch, yaw):
   return rotmat
 
 # optical extrinsic from the tool.
-calibrationpath = './data/lucid/fwc_c/fwc_c.json'
-# calibrationpath = './data/lucid/fnc/fnc.json'
 with open(calibrationpath, "r") as f:
     data = json.load(f)
 
@@ -88,9 +113,11 @@ intrinsics = np.array([[intr['fx']*1, 0, intr['cx']*scale],
 
 
 scaled_K = intrinsics.copy()
-offset_h_1 = 500 # x
-offset_h_2 = 964 # y
-
+# OFFSET VALUES FOR WIDE CAMERAS
+# fwc_c = 500, 964
+# fwc_l, fwc_r = 300, 300
+offset_h_1 = 300 # x
+offset_h_2 = 300 # y
 if scale != 1.0:
     offset_h_1 *= scale
     offset_h_2 *= scale
@@ -100,7 +127,7 @@ scaled_K[1][2] =  2 * intrinsics[1, 2] - offset_h_1
 
 intrinsics = scaled_K
 camera_matrix = scaled_K
-# import pdb;pdb.set_trace()
+# # import pdb;pdb.set_trace()
 distortion = np.zeros((4, 1), dtype=float)
 #code block ends
 
@@ -110,7 +137,6 @@ print('distortion', distortion)
 print('extrinsics', camera_matrix)
 
 # import pdb;pdb.set_trace()
-import colorsys
 
 def create_color_ramp(num_colors):
   """
@@ -169,9 +195,8 @@ def project_to_file(point_cloud_file, image_file, output_file):
       # import pdb;pdb.set_trace() 
       #try to interchangeably use cv2.fisheye.projectPoints and cv2.projectPoints and see what works for different scenarios
       # projected_points, _ = cv2.fisheye.projectPoints(np.array([np.array([image_3d_point], dtype='float32')], dtype='float32'), rotation_vector,
-      #                                                 translation_vector2, camera_matrix, distortion)
+                                                      # translation_vector2, camera_matrix, distortion)
       projected_points, _ = cv2.projectPoints(np.array([np.array([image_3d_point], dtype='float32')], dtype='float32'), rotation_vector, translation_vector2, camera_matrix, distortion)#for undistorted image only the image_3d_point and camera_matrix have values, rest all are zeros 
-                                          
       projected_point_in_2d = projected_points[0][0]
       if projected_point_in_2d[0] >= 0 and projected_point_in_2d[0] < image.shape[1] and projected_point_in_2d[1] >= 0 and projected_point_in_2d[1] < image.shape[0]:
         image_point_distance = np.linalg.norm(image_3d_point)
@@ -192,8 +217,4 @@ def project_to_file(point_cloud_file, image_file, output_file):
 # for pcd_file in pcd_files:
 #   base_name, _ = os.path.splitext(pcd_file)
 #   project_to_file(pcd_file, base_name + ".jpg", base_name + "_projection.jpg")
-image_file = "./data/lucid/fwc_c/0.png" # "../data/cam03/000000.png"
-# image_file = "./data/lucid/fnc/0.png"
-lidar_file = "./data/lucid/000000.pcd"  # PCD file
-output_file = "./cloudvisualization_output.png"
 project_to_file(lidar_file, image_file, output_file)

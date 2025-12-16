@@ -1,0 +1,27 @@
+{
+    "roll": 0.0,
+    "pitch": 0.0,
+    "yaw": 0.0,
+    "file_names": ["000000"],
+    "params": {
+        "min_plane_point_num": 2000,
+        "cluster_tolerance": 0.25,
+        "search_num": 4000,
+        "search_range": {
+            "rot_deg": 5,
+            "trans_m": 0.5
+        },
+        "point_range": {
+            "top": 0.0,
+            "bottom": 1.0
+        },
+        "down_sample": {
+            "is_valid": false,
+            "voxel_m": 0.05
+        },
+        "thread": {
+            "is_multi_thread": true,
+            "num_thread": 8
+        }
+    }
+}
