@@ -122,6 +122,57 @@ python processed_mask.py -i <YOUR_DATA_FOLDER>/masks/ -o <YOUR_DATA_FOLDER>/proc
 ./bin/run_lidar2camera <path-to-json-file>
 ```
 
+### Testing with Calibration Jitter
+
+To test the robustness of the calibration algorithm, you can use the jitter script to add random errors to the initial `T_lidar_to_cam` matrix and observe how well the calibration recovers.
+
+#### Installation
+```shell
+pip install -r scripts/requirements.txt
+```
+
+#### Usage
+```shell
+python3 scripts/jitter_calibration.py <path-to-calib.json> [options]
+```
+
+The script will:
+1. Create a backup of the original `calib.json` as `calib_original.json`
+2. Apply random roll, pitch, yaw, and translation errors to `T_lidar_to_cam`
+3. Print the exact errors being applied
+4. Run the calibration binary
+5. Restore the original `calib.json` and delete the backup
+
+#### Options
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--roll` | 2.0 | Max roll error in degrees |
+| `--pitch` | 2.0 | Max pitch error in degrees |
+| `--yaw` | 2.0 | Max yaw error in degrees |
+| `--tx` | 0.1 | Max X translation error in meters |
+| `--ty` | 0.1 | Max Y translation error in meters |
+| `--tz` | 0.1 | Max Z translation error in meters |
+| `--seed` | None | Random seed for reproducibility |
+| `--dry-run` | - | Show jitter values without running calibration |
+
+#### Examples
+```shell
+# Run with default jitter ranges (2 deg rotation, 0.1m translation)
+python3 scripts/jitter_calibration.py ./data/cam03/calib.json
+
+# Larger rotation errors, smaller translation errors
+python3 scripts/jitter_calibration.py ./data/cam03/calib.json --roll 5 --pitch 5 --yaw 5 --tx 0.05 --ty 0.05 --tz 0.05
+
+# Only rotation errors (no translation)
+python3 scripts/jitter_calibration.py ./data/cam03/calib.json --tx 0 --ty 0 --tz 0
+
+# Reproducible run with a fixed seed
+python3 scripts/jitter_calibration.py ./data/cam03/calib.json --seed 42
+
+# Preview jitter values without modifying files
+python3 scripts/jitter_calibration.py ./data/cam03/calib.json --dry-run
+```
+
 ## Output
 - initial projection: `init_proj.png`, `init_proj_seg.png`
 - gt projection: `gt_proj.png`, `gt_proj_seg.png`
