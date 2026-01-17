@@ -73,10 +73,10 @@ def project_and_save(calib, points, image_file, output_image_file, cx_offset, cy
 
 if __name__ == '__main__':
     # --- Set your own files and values here ---
-    calibration_file = './data/cam05/FWC_R.json'
-    pcd_file = './data/cam05/pc/000000.pcd'
-    image_file = './data/cam05/images/000000.png'
-    output_image_file = './data/cam05/projected_outputcam5.jpg'
+    calibration_file = './data/lucid/rnc_c/rnc_c.json'
+    pcd_file = './data/cam67/pc/000000.pcd'
+    image_file = './data/cam67/images/000000.png'
+    output_image_file = './data/cam05/projected_outputcam67.jpg'
 
     cx_offset = 0
     cy_offset = 0

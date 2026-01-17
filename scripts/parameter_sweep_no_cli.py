@@ -131,26 +131,26 @@ PARAM_CONFIG = {
     "params.min_plane_point_num": {
         "default": 200,
         "sweep": True,
-        "min": 100,
-        "max": 3000,
-        "step": 500
+        "min": 1700,
+        "max": 2300,
+        "step": 100
     },
     "params.cluster_tolerance": {
-        "default": 0.1,
+        "default": 0.2,
         "sweep": False,
         "min": 0.1,
         "max": 0.3,
         "step": 0.2
     },
     "params.search_num": {
-        "default": 4000,
-        "sweep": False,
-        "min": 2000,
-        "max": 8000,
-        "step": 2000
+        "default": 8000,
+        "sweep": True,
+        "min": 8000,
+        "max": 16000,
+        "step": 8000
     },
     "params.search_range.rot_deg": {
-        "default": 5,
+        "default": 3,
         "sweep": False,
         "min": 3,
         "max": 7,
@@ -164,7 +164,7 @@ PARAM_CONFIG = {
         "step": 0.1
     },
     "params.point_range.top": {
-        "default": 0.0,
+        "default": 0.5,
         "sweep": False,
         "min": 0.0,
         "max": 0.5,
@@ -179,7 +179,7 @@ PARAM_CONFIG = {
     },
     "params.down_sample.voxel_m": {
         "default": 0.05,
-        "sweep": True,
+        "sweep": False,
         "min": 0.01,
         "max": 1.0,
         "step": 0.1
