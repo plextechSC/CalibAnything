@@ -28,7 +28,7 @@ def find_scenes(input_dir: Path) -> List[Path]:
     scenes = []
     for item in input_dir.iterdir():
         # TODO: go through all folders not just scene
-        if item.is_dir() and item.name.startswith('scene'):
+        if item.is_dir():
             scenes.append(item)
     return sorted(scenes)
 
@@ -90,16 +90,39 @@ def create_output_structure(output_dir: Path, scene_name: str, camera_name: str)
 def copy_images_and_pcds(scene_dir: Path, camera_name: str, 
                          dirs: Dict[str, Path], pcd_files: List[Path],
                          file_names: List[str]):
-    """Copy images and PCD files from scene to output structure."""
-    # Copy image from camera directory
-    cam_source_dir = scene_dir / camera_name
-    sample_image = cam_source_dir / "sample_image.png"
+    """Copy images and PCD files from scene to output structure.
     
-    if sample_image.exists():
-        for file_name in file_names:
-            dest_image = dirs['images_dir'] / f"{file_name}.png"
-            shutil.copy2(sample_image, dest_image)
-            print(f"  Copied image to {dest_image}")
+    Images are copied from the camera directory and all its subdirectories.
+    All found image files (png, jpg, etc.) are copied to the images directory.
+    """
+    # Copy all images from camera directory and subdirectories
+    cam_source_dir = scene_dir / camera_name
+    
+    if not cam_source_dir.exists():
+        print(f"  Warning: Camera directory does not exist: {cam_source_dir}")
+        return
+    
+    # Find all image files in camera directory and subdirectories
+    image_extensions = {'.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG'}
+    image_files = []
+    
+    # Search in the camera directory and all subdirectories
+    for item in cam_source_dir.rglob('*'):
+        if item.is_file() and item.suffix in image_extensions:
+            image_files.append(item)
+    
+    # Sort image files for consistent ordering
+    image_files.sort()
+    
+    if len(image_files) == 0:
+        print(f"  Warning: No image files found in {cam_source_dir}")
+    else:
+        # Copy each image file to the images directory
+        for image_file in image_files:
+            # Use the original filename for the destination
+            dest_image = dirs['images_dir'] / image_file.name
+            shutil.copy2(image_file, dest_image)
+            print(f"  Copied image: {image_file.name} -> {dest_image}")
     
     # Copy PCD files
     for pcd_file, file_name in zip(pcd_files, file_names):

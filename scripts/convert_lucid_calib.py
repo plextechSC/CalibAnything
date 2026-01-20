@@ -40,6 +40,19 @@ WIDE_OFFSET_Y = {
     'FWC_R': 300.0,
 }
 
+# Mapping from JSON camera field values to normalized camera names
+# JSON files contain lowercase camera names like "fnc_c", "fwc_c", etc.
+JSON_CAMERA_MAP = {
+    'fnc_c': 'FNC',
+    'fnc': 'FNC',
+    'fwc_c': 'FWC_C',
+    'fwc_l': 'FWC_L',
+    'fwc_r': 'FWC_R',
+    'rnc_c': 'RNC_C',
+    'rnc_l': 'RNC_L',
+    'rnc_r': 'RNC_R',
+}
+
 
 def detect_camera_from_path(path: str) -> str | None:
     """
@@ -121,13 +134,59 @@ def parse_camera_identifier(camera_str: str) -> str:
     return camera_input
 
 
+def detect_camera_from_json(input_path: str) -> str | None:
+    """
+    Try to detect camera name from the JSON file's "camera" field.
+    
+    Args:
+        input_path: Path to the Lucid calibration JSON file
+        
+    Returns:
+        Camera name (e.g., 'FNC') if found in JSON, None otherwise
+    """
+    try:
+        with open(input_path, 'r') as f:
+            data = json.load(f)
+        
+        # Check if camera field exists in intrinsic_params
+        if 'intrinsic_params' in data and 'camera' in data['intrinsic_params']:
+            json_camera = data['intrinsic_params']['camera'].lower().strip()
+            
+            # Try direct mapping first
+            if json_camera in JSON_CAMERA_MAP:
+                return JSON_CAMERA_MAP[json_camera]
+            
+            # Try to match by converting JSON name to normalized format
+            # e.g., "fnc_c" -> "FNC", "fwc_c" -> "FWC_C"
+            json_camera_upper = json_camera.upper()
+            if json_camera_upper in VALID_CAMERA_NAMES:
+                return json_camera_upper
+            
+            # Try partial matching (e.g., "fnc_c" contains "fnc")
+            for normalized_name in VALID_CAMERA_NAMES:
+                if normalized_name.replace('_', '').lower() in json_camera:
+                    return normalized_name
+            
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        # If file doesn't exist, can't be parsed, or doesn't have camera field, return None
+        pass
+    
+    return None
+
+
 def resolve_camera(camera_arg: str | None, input_path: str, output_path: str) -> str:
     """
-    Resolve the camera name from explicit argument or by auto-detecting from paths.
+    Resolve the camera name from explicit argument, JSON file, or by auto-detecting from paths.
+    
+    Priority order:
+    1. Explicit camera argument (-c/--camera)
+    2. Camera field in JSON file (intrinsic_params.camera)
+    3. Auto-detect from input path
+    4. Auto-detect from output path
     
     Args:
         camera_arg: Explicit camera identifier (or None for auto-detect)
-        input_path: Input file path (used for auto-detection)
+        input_path: Input file path (used for JSON reading and auto-detection)
         output_path: Output file path (used for auto-detection)
         
     Returns:
@@ -136,19 +195,26 @@ def resolve_camera(camera_arg: str | None, input_path: str, output_path: str) ->
     Raises:
         ValueError: If camera cannot be determined
     """
-    if camera_arg:
-        return parse_camera_identifier(camera_arg)
+    # if camera_arg:
+    #     return parse_camera_identifier(camera_arg)
     
-    # Try to auto-detect from input path first, then output path
+    # Try to read camera from JSON file first
+    camera_name = detect_camera_from_json(input_path)
+    print(f"Camera name from JSON file: {camera_name}")
+    if camera_name:
+        return camera_name
+    
+    # Fall back to path-based detection
     camera_name = detect_camera_from_path(input_path)
     if not camera_name:
         camera_name = detect_camera_from_path(output_path)
     
     if not camera_name:
         raise ValueError(
-            f"Unable to detect camera type from paths.\n"
+            f"Unable to detect camera type.\n"
             f"  Input: {input_path}\n"
             f"  Output: {output_path}\n"
+            f"  Tried: JSON file 'camera' field, path detection\n"
             f"Please specify camera with -c/--camera. Valid options:\n"
             f"  Camera names: {VALID_CAMERA_NAMES}\n"
             f"  Camera numbers: {list(CAMERA_MAP.keys())}"
