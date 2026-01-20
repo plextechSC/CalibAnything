@@ -16,3 +16,4 @@ venv/
 /*.pcd
 extrinsic.txt
 output/
+external/

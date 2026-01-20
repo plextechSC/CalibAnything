@@ -535,8 +535,21 @@ def copy_images_and_pcds(scene_dir: Path, camera_name: str,
 
 def convert_calib_file(lucid_calib_path: Path, output_calib_path: Path, 
                        camera_name: str, file_names: List[str],
-                       convert_script: Path = None) -> bool:
-    """Convert lucid_calib.json to calib.json using convert_lucid_calib.py."""
+                       convert_script: Path = None,
+                       params_file: Optional[Path] = None) -> bool:
+    """Convert lucid_calib.json to calib.json using convert_lucid_calib.py.
+    
+    Args:
+        lucid_calib_path: Path to input lucid_calib.json
+        output_calib_path: Path to output calib.json
+        camera_name: Camera name (e.g., 'cam03')
+        file_names: List of file names to process
+        convert_script: Path to convert_lucid_calib.py
+        params_file: Optional path to params.json with calibration parameters
+        
+    Returns:
+        True if successful, False on error
+    """
     if convert_script is None:
         # Assume script is in scripts/ directory relative to this script
         script_dir = Path(__file__).parent
@@ -554,6 +567,11 @@ def convert_calib_file(lucid_calib_path: Path, output_calib_path: Path,
         '-c', camera_name,
         '--files'
     ] + file_names
+    
+    # Add params file if provided
+    if params_file and params_file.exists():
+        cmd.extend(['--params-file', str(params_file)])
+        print(f"  Using params from: {params_file}")
     
     try:
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -774,12 +792,17 @@ def process_scene(scene_dir: Path, output_dir: Path,
         lucid_calib_path = scene_dir / camera_name / "lucid_calib.json"
         output_calib_path = dirs['cam_dir'] / "calib.json"
         
+        # Look for params.json in camera source folder
+        params_file = scene_dir / camera_name / "params.json"
+        if not params_file.exists():
+            params_file = None  # Will use defaults
+        
         if not lucid_calib_path.exists():
             print(f"  Warning: lucid_calib.json not found at {lucid_calib_path}")
             continue
         
         if not convert_calib_file(lucid_calib_path, output_calib_path, camera_name, 
-                                 file_names, convert_script):
+                                 file_names, convert_script, params_file):
             print(f"  Failed to convert calibration file for {camera_name}")
             continue
         
