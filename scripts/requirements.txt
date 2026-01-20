@@ -1,1 +1,8 @@
+# Core numerical computing
 numpy>=1.21.0
+
+# Computer vision (for processed_mask.py)
+opencv-python>=4.5.0
+
+# Scientific computing - rotations (for convert_lucid_calib.py)
+scipy>=1.7.0
